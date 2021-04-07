@@ -3,90 +3,95 @@
 ##### Uniqname: dreray
 #################################
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 import requests
 import json
 import secrets # file that contains your API key
+import time 
+import json
 
 BASE_URL ='https://www.nps.gov/'
-response = requests.get(BASE_URL)
-soup = BeautifulSoup(response.text, 'html.parser')
+site_url = BASE_URL+'/isro'
+state_url = 'https://www.nps.gov/state/mi/index.htm'
 
-#print(soup)
+CACHE_FILE_NAME = 'cacheSI_Scrape.json'
+CACHE_DICT = {}
 
+key = secrets.API_KEY
+
+headers = {'User-Agent': 'UMSI 507 Course Project - Python Web Scraping','From': 'ray@umich.edu','Course-Info': 'https://www.si.umich.edu/programs/courses/507'}
+
+def load_cache():
+    try:
+        cache_file = open(CACHE_FILE_NAME, 'r')
+        cache_file_contents = cache_file.read()
+        cache = json.loads(cache_file_contents)
+        cache_file.close()
+    except:
+        cache = {}
+    return cache
+
+
+def save_cache(cache):
+    cache_file = open(CACHE_FILE_NAME, 'w')
+    contents_to_write = json.dumps(cache)
+    cache_file.write(contents_to_write)
+    cache_file.close()
+
+
+def make_url_request_using_cache(url, cache):
+    if (url in cache.keys()): # the url is our unique key
+        print("Using cache")
+        return cache[url]
+    else:
+        print("Fetching")
+        time.sleep(1)
+        response = requests.get(url, headers=headers)
+        cache[url] = response.text
+        save_cache(cache)
+        return cache[url]
+
+
+def make_url_request_using_cache2(url, cache):
+    if (url in cache.keys()): # the url is our unique key
+        print("Using cache")
+        return cache[url]
+    else:
+        print("Fetching")
+        time.sleep(1)
+        response = requests.get(url, params=parameters, headers=headers)
+        cache[url] = response.text
+        save_cache(cache)
+        return cache[url]
+
+CACHE_DICT = load_cache()
+
+#STATES(HOMEPAGE)
+response = make_url_request_using_cache(BASE_URL, CACHE_DICT)
+#response = requests.get(BASE_URL)
+soup = BeautifulSoup(response, 'html.parser')
 states = soup.find('ul', class_= 'dropdown-menu SearchBar-keywordSearch').find_all('li')
 
 
 
-parks_url = BASE_URL+'/yell'
-response2 = requests.get(parks_url)
-soup2 = BeautifulSoup(response2.text, 'html.parser')
-
-
-parks = soup2.find('div', class_ = "Hero-titleContainer clearfix").find('a')
-park_name = parks.text.strip()
-print(park_name)
-
-
-category = soup2.find('div', class_ = "Hero-designationContainer").find('span')
-park_category = category.text.strip()
-
-print(park_category)
+#PARKS (PARK PAGES)
+response2 = make_url_request_using_cache(site_url, CACHE_DICT)
+#response2 = requests.get(site_url)
+soup2 = BeautifulSoup(response2 , 'html.parser')
 
 
 
+#STATE GRAB 
+#Takes a state page URL(e.g.“https://www.nps.gov/state/tx/index.htm”) and returns a list of NationalSiteobjects in the state page.
 
 
 
+response3 = make_url_request_using_cache(state_url, CACHE_DICT)
+#response3 = requests.get(state_url)
+soup3 = BeautifulSoup(response3, 'html.parser')
+state_parks = soup3.find_all('h3')
 
 
-
-
-
-
-'''
-
-<div class="col-sm-12">
-<div class="Hero-titleContainer clearfix">
-<a href="/yell/" class="Hero-title " id="anch_10">Yellowstone</a>
-<div class="Hero-designationContainer">
-<span class="Hero-designation">National Park</span>
-<span class="Hero-location">ID, MT, WY</span>
-</div>
-</div>
-</div>
-
-<div class="Hero-titleContainer clearfix">
-<a href="/isro/" class="Hero-title " id="anch_10">Isle Royale</a>
-<div class="Hero-designationContainer">
-<span class="Hero-designation">National Park</span>
-<span class="Hero-location">Michigan</span>
-</div>
-</div>
-
-'''
-
-
-
-
-'''
-<ul class="dropdown-menu SearchBar-keywordSearch" role="menu" style="max-height: 300px; overflow-y: auto; overflow-x: hidden;">
-<li><a href="/state/al/index.htm" id="anch_10">Alabama</a></li><li><a href="/state/ak/index.htm" id="anch_11">Alaska</a></li><li><a href="/state/as/index.htm" id="anch_12">American Samoa</a></li><li><a href="/state/az/index.htm" id="anch_13">Arizona</a></li><li><a href="/state/ar/index.htm" id="anch_14">Arkansas</a></li><li><a href="/state/ca/index.htm" id="anch_15">California</a></li><li><a href="/state/co/index.htm" id="anch_16">Colorado</a></li><li><a href="/state/ct/index.htm" id="anch_17">Connecticut</a></li><li><a href="/state/de/index.htm" id="anch_18">Delaware</a></li><li><a href="/state/dc/index.htm" id="anch_19">District of Columbia</a></li><li><a href="/state/fl/index.htm" id="anch_20">Florida</a></li><li><a href="/state/ga/index.htm" id="anch_21">Georgia</a></li><li><a href="/state/gu/index.htm" id="anch_22">Guam</a></li><li><a href="/state/hi/index.htm" id="anch_23">Hawaii</a></li><li><a href="/state/id/index.htm" id="anch_24">Idaho</a></li><li><a href="/state/il/index.htm" id="anch_25">Illinois</a></li><li><a href="/state/in/index.htm" id="anch_26">Indiana</a></li><li><a href="/state/ia/index.htm" id="anch_27">Iowa</a></li><li><a href="/state/ks/index.htm" id="anch_28">Kansas</a></li><li><a href="/state/ky/index.htm" id="anch_29">Kentucky</a></li><li><a href="/state/la/index.htm" id="anch_30">Louisiana</a></li><li><a href="/state/me/index.htm" id="anch_31">Maine</a></li><li><a href="/state/md/index.htm" id="anch_32">Maryland</a></li><li><a href="/state/ma/index.htm" id="anch_33">Massachusetts</a></li><li><a href="/state/mi/index.htm" id="anch_34">Michigan</a></li><li><a href="/state/mn/index.htm" id="anch_35">Minnesota</a></li><li><a href="/state/ms/index.htm" id="anch_36">Mississippi</a></li><li><a href="/state/mo/index.htm" id="anch_37">Missouri</a></li><li><a href="/state/mt/index.htm" id="anch_38">Montana</a></li><li><a href="/state/ne/index.htm" id="anch_39">Nebraska</a></li><li><a href="/state/nv/index.htm" id="anch_40">Nevada</a></li><li><a href="/state/nh/index.htm" id="anch_41">New Hampshire</a></li><li><a href="/state/nj/index.htm" id="anch_42">New Jersey</a></li><li><a href="/state/nm/index.htm" id="anch_43">New Mexico</a></li><li><a href="/state/ny/index.htm" id="anch_44">New York</a></li><li><a href="/state/nc/index.htm" id="anch_45">North Carolina</a></li><li><a href="/state/nd/index.htm" id="anch_46">North Dakota</a></li><li><a href="/state/mp/index.htm" id="anch_47">Northern Mariana Islands</a></li><li><a href="/state/oh/index.htm" id="anch_48">Ohio</a></li><li><a href="/state/ok/index.htm" id="anch_49">Oklahoma</a></li><li><a href="/state/or/index.htm" id="anch_50">Oregon</a></li><li><a href="/state/pa/index.htm" id="anch_51">Pennsylvania</a></li><li><a href="/state/pr/index.htm" id="anch_52">Puerto Rico</a></li><li><a href="/state/ri/index.htm" id="anch_53">Rhode Island</a></li><li><a href="/state/sc/index.htm" id="anch_54">South Carolina</a></li><li><a href="/state/sd/index.htm" id="anch_55">South Dakota</a></li><li><a href="/state/tn/index.htm" id="anch_56">Tennessee</a></li><li><a href="/state/tx/index.htm" id="anch_57">Texas</a></li><li><a href="/state/ut/index.htm" id="anch_58">Utah</a></li><li><a href="/state/vt/index.htm" id="anch_59">Vermont</a></li><li><a href="/state/vi/index.htm" id="anch_60">Virgin Islands</a></li><li><a href="/state/va/index.htm" id="anch_61">Virginia</a></li><li><a href="/state/wa/index.htm" id="anch_62">Washington</a></li><li><a href="/state/wv/index.htm" id="anch_63">West Virginia</a></li><li><a href="/state/wi/index.htm" id="anch_64">Wisconsin</a></li><li><a href="/state/wy/index.htm" id="anch_65">Wyoming</a></li>
-</ul>
-
-'''
-
-'''
-<div class="SearchBar-keywordSearch input-group input-group-lg open" role="group">
-<button type="button" class="SearchBar-keywordSearch input-group input-group-lg btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-By State... <span class="caret"></span>
-</button>
-<!--populate state links here in this list-->
-<ul class="dropdown-menu SearchBar-keywordSearch" role="menu" style="max-height: 300px; overflow-y: auto; overflow-x: hidden;">
-<li><a href="/state/al/index.htm" id="anch_10">Alabama</a></li><li><a href="/state/ak/index.htm" id="anch_11">Alaska</a></li><li><a href="/state/as/index.htm" id="anch_12">American Samoa</a></li><li><a href="/state/az/index.htm" id="anch_13">Arizona</a></li><li><a href="/state/ar/index.htm" id="anch_14">Arkansas</a></li><li><a href="/state/ca/index.htm" id="anch_15">California</a></li><li><a href="/state/co/index.htm" id="anch_16">Colorado</a></li><li><a href="/state/ct/index.htm" id="anch_17">Connecticut</a></li><li><a href="/state/de/index.htm" id="anch_18">Delaware</a></li><li><a href="/state/dc/index.htm" id="anch_19">District of Columbia</a></li><li><a href="/state/fl/index.htm" id="anch_20">Florida</a></li><li><a href="/state/ga/index.htm" id="anch_21">Georgia</a></li><li><a href="/state/gu/index.htm" id="anch_22">Guam</a></li><li><a href="/state/hi/index.htm" id="anch_23">Hawaii</a></li><li><a href="/state/id/index.htm" id="anch_24">Idaho</a></li><li><a href="/state/il/index.htm" id="anch_25">Illinois</a></li><li><a href="/state/in/index.htm" id="anch_26">Indiana</a></li><li><a href="/state/ia/index.htm" id="anch_27">Iowa</a></li><li><a href="/state/ks/index.htm" id="anch_28">Kansas</a></li><li><a href="/state/ky/index.htm" id="anch_29">Kentucky</a></li><li><a href="/state/la/index.htm" id="anch_30">Louisiana</a></li><li><a href="/state/me/index.htm" id="anch_31">Maine</a></li><li><a href="/state/md/index.htm" id="anch_32">Maryland</a></li><li><a href="/state/ma/index.htm" id="anch_33">Massachusetts</a></li><li><a href="/state/mi/index.htm" id="anch_34">Michigan</a></li><li><a href="/state/mn/index.htm" id="anch_35">Minnesota</a></li><li><a href="/state/ms/index.htm" id="anch_36">Mississippi</a></li><li><a href="/state/mo/index.htm" id="anch_37">Missouri</a></li><li><a href="/state/mt/index.htm" id="anch_38">Montana</a></li><li><a href="/state/ne/index.htm" id="anch_39">Nebraska</a></li><li><a href="/state/nv/index.htm" id="anch_40">Nevada</a></li><li><a href="/state/nh/index.htm" id="anch_41">New Hampshire</a></li><li><a href="/state/nj/index.htm" id="anch_42">New Jersey</a></li><li><a href="/state/nm/index.htm" id="anch_43">New Mexico</a></li><li><a href="/state/ny/index.htm" id="anch_44">New York</a></li><li><a href="/state/nc/index.htm" id="anch_45">North Carolina</a></li><li><a href="/state/nd/index.htm" id="anch_46">North Dakota</a></li><li><a href="/state/mp/index.htm" id="anch_47">Northern Mariana Islands</a></li><li><a href="/state/oh/index.htm" id="anch_48">Ohio</a></li><li><a href="/state/ok/index.htm" id="anch_49">Oklahoma</a></li><li><a href="/state/or/index.htm" id="anch_50">Oregon</a></li><li><a href="/state/pa/index.htm" id="anch_51">Pennsylvania</a></li><li><a href="/state/pr/index.htm" id="anch_52">Puerto Rico</a></li><li><a href="/state/ri/index.htm" id="anch_53">Rhode Island</a></li><li><a href="/state/sc/index.htm" id="anch_54">South Carolina</a></li><li><a href="/state/sd/index.htm" id="anch_55">South Dakota</a></li><li><a href="/state/tn/index.htm" id="anch_56">Tennessee</a></li><li><a href="/state/tx/index.htm" id="anch_57">Texas</a></li><li><a href="/state/ut/index.htm" id="anch_58">Utah</a></li><li><a href="/state/vt/index.htm" id="anch_59">Vermont</a></li><li><a href="/state/vi/index.htm" id="anch_60">Virgin Islands</a></li><li><a href="/state/va/index.htm" id="anch_61">Virginia</a></li><li><a href="/state/wa/index.htm" id="anch_62">Washington</a></li><li><a href="/state/wv/index.htm" id="anch_63">West Virginia</a></li><li><a href="/state/wi/index.htm" id="anch_64">Wisconsin</a></li><li><a href="/state/wy/index.htm" id="anch_65">Wyoming</a></li>
-</ul>
-</div>
-'''
 
 class NationalSite:
     '''a national site
@@ -109,7 +114,7 @@ class NationalSite:
     phone: string
         the phone of a national site (e.g. '(616) 319-7906', '307-344-7381')
     '''
-    def __init__(self, category="", name="", address = "", zipcode="", phone=""):
+    def __init__(self, category="", name="", address="", zipcode="", phone=""):
 
         self.category = category
         self.name = name
@@ -118,9 +123,7 @@ class NationalSite:
         self.phone = phone
 
     def info(self):
-        return f"{self.name}({self.category}):{address}{self.zip}"
-
-
+        return f"{self.name} ({self.category}): {self.address} {self.zipcode}"
 
 def build_state_url_dict():
     ''' Make a dictionary that maps state name to state page url from "https://www.nps.gov"
@@ -139,14 +142,12 @@ def build_state_url_dict():
 
     for state in states:
         state_name = state.text.lower().strip()
-        state_url = state.find('a')['href']
+        state_url = state.find('a')['href'].strip('/')
         state_link = BASE_URL + state_url
         state_dict[state_name] = state_link
 
-    #print(state_dict)
+    #print(state_dict.keys())
     return state_dict
-
-
 
 
 def get_site_instance(site_url):
@@ -162,12 +163,47 @@ def get_site_instance(site_url):
     instance
         a national site instance
     '''
-    parks_url = BASE_URL+'/isro'
-    response2 = requests.get(parks_url)
+
+    response2 = requests.get(site_url)
     soup2 = BeautifulSoup(response2.text, 'html.parser')
+    
     parks = soup2.find('div', class_ = "Hero-titleContainer clearfix").find('a')
     park_name = parks.text.strip()
-    print(park_name)
+    #print(park_name)
+
+
+    if soup2.find('p', class_ = "adr").find('span', class_='region') is not None:
+        category = soup2.find('div', class_ = "Hero-designationContainer").find('span')
+        park_category = category.text.strip()
+
+    else: park_category = 'N/A'
+
+    #print(park_category)
+
+
+    #street = soup2.find('p', class_ = "adr").find('span', class_='street-address').text.strip()
+    city = soup2.find('p', class_ = "adr").find('span', itemprop='addressLocality').text.strip()
+
+    if soup2.find('p', class_ = "adr").find('span', class_='region') is not None:
+        state = soup2.find('p', class_ = "adr").find('span', class_='region').text.strip()
+    else: state = 'N/A'
+
+    if soup2.find('p', class_ = "adr").find('span', class_='postal-code') is not None:
+        zcode = soup2.find('p', class_ = "adr").find('span', class_='postal-code').text.strip()
+
+    else: zcode = 'N/A'
+
+    phone = soup2.find('div', class_ = "vcard").find('span',class_='tel').text.strip()
+
+
+    
+    address = f'{city}, {state}'
+    #print(phone)
+
+    #print(park_category,park_name,address,zcode,phone)
+    
+    return park_category,park_name,address,zcode,phone
+
 
 
 def get_sites_for_state(state_url):
@@ -183,7 +219,39 @@ def get_sites_for_state(state_url):
     list
         a list of national site instances
     '''
-    pass
+    
+    response3 = requests.get(state_url)
+    soup3 = BeautifulSoup(response3.text, 'html.parser')
+    state_parks = soup3.find_all('h3')
+
+    instance_list = []
+
+    nat_site_list = []
+
+    for parks in state_parks:
+        park_tag = parks.find('a')
+      
+        if park_tag is not None:
+            park_path = park_tag['href'].strip('/')
+
+            park_url = BASE_URL+park_path
+            site_details = ((get_site_instance(park_url)))
+            
+            #instance_list.append(site_details)
+
+            Nat_Site_Init = NationalSite(category=site_details[0],name=site_details[1],address=site_details[2],zipcode=site_details[3],phone=site_details[4])
+
+            nat_site_list.append(Nat_Site_Init)
+
+
+
+
+
+        #body = NationalSite(category=site_detail[0],name=d)            
+
+    return(nat_site_list)
+
+#get_sites_for_state(state_url)
 
 
 def get_nearby_places(site_object):
@@ -199,8 +267,146 @@ def get_nearby_places(site_object):
     dict
         a converted API return from MapQuest API
     '''
-    pass
+
+    mapquest_url = 'http://www.mapquestapi.com/search/v2/radius'
+    parameters = {}
+    parameters['key'] = key
+    parameters['origin'] =  site_object.zipcode
+    parameters['radius'] = 10
+    parameters['maxMatches'] =  10
+    parameters['ambiguities'] = 'ignore'
+    parameters['outFormat'] =  'json'
     
 
+    #quest_response = make_url_request_using_cache2(mapquest_url, CACHE_DICT)
+    quest_response = requests.get(mapquest_url,params= parameters)
+    results = (json.loads(quest_response.text))
+    results_dict = results['searchResults']
+
+
+    #ordered_list =  []
+
+    for places in results_dict:
+        if places['name'] != "":
+            name = places['name']
+
+        if places['fields']['group_sic_code_name'] != "":
+            category = places['fields']['group_sic_code_name']
+        else: category = 'no category'
+
+        if places['fields']['address'] != "":
+            address = places['fields']['address']
+        else: address = 'no address'
+
+        if places['fields']['city'] != "":
+            city = places['fields']['city']
+        else: city = "no city"
+
+        #print(places['fields']['group_sic_code_name'])
+
+        print(f'- {name} ({category}): {address}, {city}')
+
+        # print(f'-{name}:{address},{city}')
+
+
+    #print(results_dict[2])
+
+
+
+
+# parks = get_sites_for_state(state_url)
+# get_nearby_places(parks[4])
+
 if __name__ == "__main__":
-    pass
+    
+    breakall = False
+    while breakall == False:
+        try:
+            state = input('Enter a State name (i.e Florida or florida) or "exit" : ')
+            if state.lower() == 'exit':
+                
+                print('Goodbye and May Peace Be With You')
+                break;
+                    
+
+            
+            
+        
+            if state.lower() in build_state_url_dict().keys():
+
+                state = state.lower()
+
+                state_dicts = (build_state_url_dict())
+
+                state_url = state_dicts[state]
+                parks = get_sites_for_state(state_url)
+
+                print('')
+                print('')
+                print("-"*20)
+                print(f'List of National Sites in {state.title()}')
+                print("-"*20)
+                print('')
+
+                counter = 1
+                #park_list = []
+                for park in parks:
+                    print (f' {[counter]} {park.info()}')
+                    
+
+                    counter += 1
+                print('')
+                print('')
+
+                while (True):
+                
+                    state2 = (input('Enter a Number for a detailed Search or "exit" or "back": '))
+                    
+                    if state2.lower() == 'back':
+                        break
+
+                    if state2.lower() == 'exit':
+        
+                        print('Goodbye and May Peace Be With You')
+                        breakall = True
+                        break
+
+
+                    if state2.isnumeric():
+                        state_num = int(state2)-1
+
+                        if state_num <= len(parks):
+                            
+                            print('')
+                            print('')
+                            print("-"*40)
+                            print(f'Places near {parks[state_num].name}')
+                            print("-"*40)
+                            print('')
+                            
+                            get_nearby_places(parks[state_num])
+                            print('')
+                            print('')
+
+                        else:
+                            print("[Error] Invalid Number" )
+                            print("-"*40)
+                            print('')
+                            print('')
+
+
+
+                    else:
+                        print("[Error] Invalid Input (not a number)" )
+                        print("-"*40)
+                        print('')
+                        print('')
+                            
+            else:
+                print("[Error] Enter a proper state name" )
+
+            
+            
+
+        except:
+            continue

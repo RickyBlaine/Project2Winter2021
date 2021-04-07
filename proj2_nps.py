@@ -67,17 +67,19 @@ def make_url_request_using_cache2(url, cache):
 CACHE_DICT = load_cache()
 
 #STATES(HOMEPAGE)
-response = make_url_request_using_cache(BASE_URL, CACHE_DICT)
-#response = requests.get(BASE_URL)
-soup = BeautifulSoup(response, 'html.parser')
+#response = make_url_request_using_cache(BASE_URL, CACHE_DICT)
+response = requests.get(BASE_URL)
+#soup = BeautifulSoup(response, 'html.parser')
+soup = BeautifulSoup(response.text, 'html.parser')
 states = soup.find('ul', class_= 'dropdown-menu SearchBar-keywordSearch').find_all('li')
 
 
 
 #PARKS (PARK PAGES)
-response2 = make_url_request_using_cache(site_url, CACHE_DICT)
-#response2 = requests.get(site_url)
-soup2 = BeautifulSoup(response2 , 'html.parser')
+#response2 = make_url_request_using_cache(site_url, CACHE_DICT)
+response2 = requests.get(site_url)
+soup2 = BeautifulSoup(response2.text, 'html.parser')
+#soup2 = BeautifulSoup(response2, 'html.parser')
 
 
 
@@ -86,9 +88,10 @@ soup2 = BeautifulSoup(response2 , 'html.parser')
 
 
 
-response3 = make_url_request_using_cache(state_url, CACHE_DICT)
-#response3 = requests.get(state_url)
-soup3 = BeautifulSoup(response3, 'html.parser')
+#response3 = make_url_request_using_cache(state_url, CACHE_DICT)
+response3 = requests.get(state_url)
+#soup3 = BeautifulSoup(response3, 'html.parser')
+soup3 = BeautifulSoup(response3.text, 'html.parser')
 state_parks = soup3.find_all('h3')
 
 
@@ -249,7 +252,7 @@ def get_sites_for_state(state_url):
 
         #body = NationalSite(category=site_detail[0],name=d)            
 
-    return(nat_site_list)
+    return nat_site_list 
 
 #get_sites_for_state(state_url)
 
